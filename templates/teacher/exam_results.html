@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Results - ' + ${summary.examTitle})}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'results' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('results')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0">
+
+                <!-- Page Header with Back Link -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center pb-3 mb-4 border-bottom gap-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h1 class="h4 fw-bold text-dark mb-0" th:text="${summary.examTitle}">Mid-Term Exam</h1>
+                            <span class="badge bg-light text-dark border" th:text="${summary.courseCode}">CS101</span>
+                        </div>
+                        <p class="text-secondary small mb-0">
+                            Course: <span class="fw-medium text-dark" th:text="${summary.courseName}">Data Structures</span> | 
+                            Total Marks: <span class="fw-medium text-dark" th:text="${summary.totalMarks}">100</span> | 
+                            Passing Threshold: <span class="fw-medium text-dark" th:text="${summary.passingMarks}">40</span> marks
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/teacher/exams/{id}/results/excel(id=${summary.examId})}" class="btn btn-outline-dark btn-sm py-1 px-3">
+                            <i class="bi bi-file-earmark-excel me-1 text-success"></i> Export to Excel
+                        </a>
+                        <a th:href="@{/teacher/results}" class="btn btn-outline-secondary btn-sm py-1 px-3">
+                            <i class="bi bi-arrow-left me-1"></i> Back to All Results
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- 5 Statistical Summary Metric Cards -->
+                <div class="row g-3 mb-4">
+                    <!-- Candidates -->
+                    <div class="col-6 col-md-4 col-xl">
+                        <div class="stat-card">
+                            <span class="stat-label">Total Candidates</span>
+                            <div class="stat-value" th:text="${summary.totalCandidates}">0</div>
+                            <div class="text-secondary small mt-1">Evaluated submissions</div>
+                        </div>
+                    </div>
+
+                    <!-- Average Score -->
+                    <div class="col-6 col-md-4 col-xl">
+                        <div class="stat-card">
+                            <span class="stat-label">Average Score</span>
+                            <div class="stat-value">
+                                <span th:text="${summary.averageScore}">0.0</span>
+                                <span class="text-secondary fs-6 fw-normal">/<span th:text="${summary.totalMarks}">100</span></span>
+                            </div>
+                            <div class="text-secondary small mt-1">Class mean score</div>
+                        </div>
+                    </div>
+
+                    <!-- Highest Score -->
+                    <div class="col-6 col-md-4 col-xl">
+                        <div class="stat-card">
+                            <span class="stat-label text-success">Highest Score</span>
+                            <div class="stat-value text-success" th:text="${summary.highestScore}">0.0</div>
+                            <div class="text-secondary small mt-1">Top grade achieved</div>
+                        </div>
+                    </div>
+
+                    <!-- Lowest Score -->
+                    <div class="col-6 col-md-6 col-xl">
+                        <div class="stat-card">
+                            <span class="stat-label text-danger">Lowest Score</span>
+                            <div class="stat-value text-danger" th:text="${summary.lowestScore}">0.0</div>
+                            <div class="text-secondary small mt-1">Minimum grade recorded</div>
+                        </div>
+                    </div>
+
+                    <!-- Pass Percentage -->
+                    <div class="col-12 col-md-6 col-xl">
+                        <div class="stat-card">
+                            <span class="stat-label">Pass Percentage</span>
+                            <div class="stat-value" 
+                                 th:classappend="${summary.passPercentage >= 50.0 ? 'text-success' : 'text-danger'}"
+                                 th:text="${summary.passPercentage + '%'}">
+                                0.0%
+                            </div>
+                            <div class="text-secondary small mt-1">Passing standard rate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart.js Score Distribution Card -->
+                <div class="card border mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold text-dark">Score Distribution Analysis</span>
+                        <span class="badge bg-light text-secondary border">Class Breakdown</span>
+                    </div>
+                    <div class="card-body p-3 p-md-4">
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="scoreDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Leaderboard & Rankings Table Card -->
+                <div class="card border mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold text-dark">Student Leaderboard &amp; Evaluation Ledger</span>
+                        <span class="badge bg-light text-secondary border" th:text="${summary.studentResults.size() + ' Candidates'}">0 Candidates</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 70px;">Rank</th>
+                                    <th>Student Details</th>
+                                    <th>Submission Time</th>
+                                    <th>Correct / Wrong / Blank</th>
+                                    <th>Score</th>
+                                    <th>Percentage</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${summary.studentResults == null or summary.studentResults.empty}">
+                                    <td colspan="8" class="text-center py-5">
+                                        <div th:replace="~{layout/alerts :: emptyState('bi-people', 'No Student Submissions', 'No candidates have submitted answers for this examination yet.')}"></div>
+                                    </td>
+                                </tr>
+                                <tr th:each="r : ${summary.studentResults}">
+                                    <!-- Rank -->
+                                    <td>
+                                        <span class="badge rounded-circle p-2" 
+                                              th:classappend="${r.rank == 1 ? 'bg-dark text-white' : (r.rank <= 3 ? 'bg-light text-dark border' : 'bg-white text-secondary')}"
+                                              th:text="'#' + ${r.rank}" 
+                                              style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                            #1
+                                        </span>
+                                    </td>
+
+                                    <!-- Student Name & Email -->
+                                    <td>
+                                        <div class="fw-semibold text-dark" th:text="${r.studentName}">Student Name</div>
+                                        <div class="text-secondary small" th:text="${r.studentEmail}">student@exam.com</div>
+                                    </td>
+
+                                    <!-- Submission Date -->
+                                    <td class="small">
+                                        <span th:text="${#temporals.format(r.submittedAt, 'dd MMM yyyy, HH:mm')}">24 Oct 2026, 17:30</span>
+                                    </td>
+
+                                    <!-- Answer Counts Breakdown -->
+                                    <td>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle me-1" th:text="${r.correctCount} + ' C'">18 C</span>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle me-1" th:text="${r.wrongCount} + ' W'">2 W</span>
+                                        <span class="badge bg-light text-secondary border" th:text="${r.unattemptedCount} + ' U'">0 U</span>
+                                    </td>
+
+                                    <!-- Score -->
+                                    <td class="fw-bold text-dark">
+                                        <span th:text="${r.score}">45.0</span>
+                                        <span class="text-secondary small fw-normal">/<span th:text="${r.totalMarks}">50.0</span></span>
+                                    </td>
+
+                                    <!-- Percentage -->
+                                    <td class="fw-semibold text-dark">
+                                        <span th:text="${r.percentage + '%'}">90.0%</span>
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${r.passed ? 'bg-success text-white' : 'bg-danger text-white'}"
+                                              th:text="${r.passed ? 'PASSED' : 'FAILED'}">
+                                            PASSED
+                                        </span>
+                                    </td>
+
+                                    <!-- Inspect Action -->
+                                    <td class="text-end">
+                                        <a th:href="@{/teacher/exams/{id}/submissions/{attemptId}(id=${summary.examId}, attemptId=${r.attemptId})}" 
+                                           class="btn btn-outline-dark btn-sm py-1 px-3">
+                                            <i class="bi bi-search me-1"></i> Inspect
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+    <!-- Score Distribution Chart Initialization -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const distributionData = /*[[${summary.distributionCounts}]]*/ [0, 0, 0, 0, 0];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('scoreDistributionChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['0 - 20%', '21 - 40%', '41 - 60%', '61 - 80%', '81 - 100%'],
+                        datasets: [{
+                            label: 'Number of Students',
+                            data: distributionData,
+                            backgroundColor: '#212529', // Institutional charcoal primary
+                            borderColor: '#212529',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            barPercentage: 0.55
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: '#212529',
+                                titleFont: { size: 12, weight: 'bold' },
+                                bodyFont: { size: 12 },
+                                padding: 10,
+                                cornerRadius: 6
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0,
+                                    color: '#6c757d',
+                                    font: { size: 11 }
+                                },
+                                grid: {
+                                    color: '#f0f0f0'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Student Count',
+                                    color: '#6c757d',
+                                    font: { size: 11 }
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#212529',
+                                    font: { size: 11, weight: '500' }
+                                },
+                                grid: {
+                                    display: false
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Score Percentage Brackets',
+                                    color: '#6c757d',
+                                    font: { size: 11 }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>

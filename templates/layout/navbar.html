@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+    <!-- Navbar Fragment -->
+    <header th:fragment="navbar" class="portal-navbar py-2 px-3">
+        <div class="d-flex align-items-center justify-content-between">
+            
+            <!-- Left: Mobile Toggle & Brand -->
+            <div class="d-flex align-items-center gap-2">
+                <!-- Mobile Sidebar Toggle -->
+                <button class="btn btn-sm btn-outline-dark d-lg-none py-1 px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-label="Toggle navigation">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+
+                <!-- Brand Title -->
+                <a th:href="@{/}" class="d-flex align-items-center gap-2 text-dark text-decoration-none fw-semibold fs-6">
+                    <i class="bi bi-mortarboard text-dark fs-4"></i>
+                    <span>Online Examination System</span>
+                </a>
+            </div>
+
+            <!-- Right: Logged-in User & Logout Button -->
+            <div class="d-flex align-items-center gap-3" sec:authorize="isAuthenticated()">
+                <div class="text-end d-none d-sm-block">
+                    <div class="small fw-semibold text-dark" th:text="${user != null ? user.fullName : #authentication.name}">
+                        User Name
+                    </div>
+                    <div class="text-secondary" style="font-size: 0.75rem;">
+                        <span sec:authorize="hasRole('ADMIN')">Administrator</span>
+                        <span sec:authorize="hasRole('TEACHER')">Faculty / Teacher</span>
+                        <span sec:authorize="hasRole('STUDENT')">Enrolled Student</span>
+                    </div>
+                </div>
+
+                <!-- Role Badge -->
+                <span class="badge bg-light text-dark border d-none d-md-inline-block">
+                    <span sec:authorize="hasRole('ADMIN')">ADMIN</span>
+                    <span sec:authorize="hasRole('TEACHER')">TEACHER</span>
+                    <span sec:authorize="hasRole('STUDENT')">STUDENT</span>
+                </span>
+
+                <!-- Logout Form -->
+                <form th:action="@{/logout}" method="post" class="m-0">
+                    <button type="submit" class="btn btn-outline-dark btn-sm py-1 px-2 px-sm-3 d-flex align-items-center gap-1">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span class="d-none d-sm-inline">Logout</span>
+                    </button>
+                </form>
+            </div>
+            
+        </div>
+    </header>
+
+</body>
+</html>

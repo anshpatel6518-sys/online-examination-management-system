@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Select Exam Questions')}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'exams' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('exams')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0" style="max-width: 1000px;">
+
+                <!-- Page Header with Back Button -->
+                <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1">Select Exam Questions</h1>
+                        <p class="text-secondary small mb-0">Choose questions from your question bank for this assessment session.</p>
+                    </div>
+                    <a th:href="@{/teacher/exams}" class="btn btn-outline-dark btn-sm py-1 px-3">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Exams
+                    </a>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Locked Alert if Exam Has Student Attempts -->
+                <div th:if="${hasAttempts}" class="alert alert-warning border d-flex align-items-center gap-2 mb-4 py-3 px-3 small" role="alert">
+                    <i class="bi bi-lock-fill fs-5 text-warning"></i>
+                    <div>
+                        <div class="fw-semibold text-dark">Question Selection Locked</div>
+                        <div>A published exam cannot have its questions changed once any student has attempted it. Checkboxes are disabled to preserve evaluation integrity.</div>
+                    </div>
+                </div>
+
+                <!-- Exam Context Summary Card -->
+                <div class="card border mb-4 bg-light">
+                    <div class="card-body p-3">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-12 col-md-5">
+                                <div class="text-secondary small text-uppercase fw-semibold">Examination</div>
+                                <div class="fw-bold text-dark fs-6" th:text="${exam.title}">Mid-Term Exam</div>
+                                <div class="text-secondary small">
+                                    <span class="badge bg-white text-dark border me-1" th:text="${exam.course.code}">CS101</span>
+                                    <span th:text="${exam.course.name}">Data Structures</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-2 border-start-md ps-md-3">
+                                <div class="text-secondary small">Passing Marks</div>
+                                <div class="fw-bold text-dark fs-5" id="passingMarksDisplay" th:text="${exam.passingMarks}">40</div>
+                            </div>
+                            <div class="col-6 col-md-2 border-start-md ps-md-3">
+                                <div class="text-secondary small">Selected Items</div>
+                                <div class="fw-bold text-dark fs-5">
+                                    <span id="selectedCount">0</span>
+                                    <span class="text-secondary fs-6 fw-normal">/ <span th:text="${bankQuestions.size()}">0</span></span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-3 border-start-md ps-md-3">
+                                <div class="text-secondary small">Total Exam Marks</div>
+                                <div class="d-flex align-items-baseline gap-2">
+                                    <span class="fw-bold text-dark fs-4" id="totalMarksDisplay">0</span>
+                                    <span class="text-secondary small">marks</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Notice for Passing Marks vs Total Marks -->
+                <div id="passingMarksNotice" class="alert alert-danger border py-2 px-3 small d-none mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    <span>Warning: Total exam marks (<span id="warnTotal">0</span>) must be greater than or equal to passing marks (<span th:text="${exam.passingMarks}">40</span>) before this exam can be published.</span>
+                </div>
+
+                <!-- Question Bank Empty State -->
+                <div th:if="${bankQuestions == null or bankQuestions.empty}" class="card border p-5 text-center mb-4">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-question-circle"></i>
+                        </div>
+                        <h5 class="h6 fw-semibold text-dark mb-1">No Questions in Course Bank</h5>
+                        <p class="text-secondary small mb-3">There are no questions authored yet for <span class="fw-semibold text-dark" th:text="${exam.course.name}">this course</span>. Add questions first to select them for this exam.</p>
+                        <div>
+                            <a th:href="@{/teacher/questions/new(courseId=${exam.course.id})}" class="btn btn-dark btn-sm py-2 px-3">
+                                <i class="bi bi-plus-lg me-1"></i> Add Question to Course Bank
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Checklist Form -->
+                <div th:if="${bankQuestions != null and not bankQuestions.empty}">
+                    <form th:action="@{/teacher/exams/{id}/questions(id=${exam.id})}" method="post" id="questionSelectForm">
+
+                        <!-- Action Toolbar -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" 
+                                        class="btn btn-outline-dark btn-sm py-1 px-2" 
+                                        onclick="toggleAllQuestions(true)"
+                                        th:disabled="${hasAttempts}">
+                                    <i class="bi bi-check-all me-1"></i> Select All
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-outline-dark btn-sm py-1 px-2" 
+                                        onclick="toggleAllQuestions(false)"
+                                        th:disabled="${hasAttempts}">
+                                    <i class="bi bi-dash-lg me-1"></i> Clear All
+                                </button>
+                            </div>
+                            <div class="text-secondary small">
+                                Check the questions to include in this exam.
+                            </div>
+                        </div>
+
+                        <!-- Questions List Card -->
+                        <div class="card border mb-4">
+                            <div class="list-group list-group-flush">
+                                <div th:each="q, stat : ${bankQuestions}" class="list-group-item p-3 question-row">
+                                    <div class="d-flex align-items-start gap-3">
+                                        
+                                        <!-- Checkbox -->
+                                        <div class="pt-1">
+                                            <input class="form-check-input question-checkbox" 
+                                                   type="checkbox" 
+                                                   name="questionIds" 
+                                                   th:value="${q.id}"
+                                                   th:id="'q_' + ${q.id}"
+                                                   th:data-marks="${q.marks != null ? q.marks : 1}"
+                                                   th:checked="${linkedQuestionIds.contains(q.id)}"
+                                                   th:disabled="${hasAttempts}"
+                                                   onchange="recalculateMarks()" />
+                                        </div>
+
+                                        <!-- Question Details -->
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                                <span class="badge bg-light text-dark border" th:text="'Q' + ${stat.count}">Q1</span>
+                                                
+                                                <!-- Type Badge -->
+                                                <span class="badge bg-white text-secondary border small" 
+                                                      th:text="${q.type == T(com.examportal.model.QuestionType).MCQ ? 'MCQ' : 'True/False'}">
+                                                    MCQ
+                                                </span>
+
+                                                <!-- Difficulty Badge -->
+                                                <span class="badge"
+                                                      th:classappend="${q.difficulty == T(com.examportal.model.Difficulty).EASY ? 'bg-success-subtle text-success border border-success-subtle' : (q.difficulty == T(com.examportal.model.Difficulty).MEDIUM ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle')}"
+                                                      th:text="${q.difficulty}">
+                                                    EASY
+                                                </span>
+
+                                                <!-- Marks Badge -->
+                                                <span class="badge bg-dark text-white ms-auto">
+                                                    <span th:text="${q.marks != null ? q.marks : 1}">1</span> Marks
+                                                </span>
+                                            </div>
+
+                                            <!-- Question Text (clickable label) -->
+                                            <label th:for="'q_' + ${q.id}" class="fw-semibold text-dark mb-2 d-block user-select-none" style="cursor: pointer;" th:text="${q.text}">
+                                                Question text statement...
+                                            </label>
+
+                                            <!-- Options Preview -->
+                                            <div class="row g-2 pt-1" th:if="${q.options != null and not q.options.empty}">
+                                                <div th:each="opt : ${q.options}" class="col-12 col-md-6">
+                                                    <div class="small p-2 rounded border" 
+                                                         th:classappend="${opt.correct ? 'bg-light border-success fw-medium text-dark' : 'bg-white text-secondary'}">
+                                                        <i th:class="${opt.correct ? 'bi bi-check-circle-fill text-success me-1' : 'bi bi-circle text-muted me-1'}"></i>
+                                                        <span th:text="${opt.optionText}">Option text</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sticky Action Bar -->
+                        <div class="card border bg-white p-3 shadow-sm sticky-bottom mb-4">
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+                                <div class="small text-secondary">
+                                    <span class="fw-semibold text-dark" id="bottomSelectedCount">0</span> questions selected | 
+                                    Total: <span class="fw-bold text-dark" id="bottomTotalMarks">0</span> marks
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a th:href="@{/teacher/exams}" class="btn btn-outline-dark btn-sm py-2 px-3">Back to Exams</a>
+                                    <button type="submit" class="btn btn-dark btn-sm py-2 px-4" th:disabled="${hasAttempts}">
+                                        <i class="bi bi-save me-1"></i> Save Question Selection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <!-- Marks Calculation Script -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const passingMarks = /*[[${exam.passingMarks}]]*/ 40;
+
+        function recalculateMarks() {
+            const checkboxes = document.querySelectorAll('.question-checkbox');
+            let total = 0;
+            let count = 0;
+
+            checkboxes.forEach(function (cb) {
+                if (cb.checked) {
+                    count++;
+                    const marks = parseInt(cb.getAttribute('data-marks') || '1', 10);
+                    total += marks;
+                }
+            });
+
+            document.getElementById('totalMarksDisplay').textContent = total;
+            document.getElementById('selectedCount').textContent = count;
+
+            const bottomCount = document.getElementById('bottomSelectedCount');
+            if (bottomCount) bottomCount.textContent = count;
+
+            const bottomTotal = document.getElementById('bottomTotalMarks');
+            if (bottomTotal) bottomTotal.textContent = total;
+
+            const warnBox = document.getElementById('passingMarksNotice');
+            const warnTotal = document.getElementById('warnTotal');
+            if (warnBox && warnTotal) {
+                warnTotal.textContent = total;
+                if (total > 0 && total < passingMarks) {
+                    warnBox.classList.remove('d-none');
+                } else {
+                    warnBox.classList.add('d-none');
+                }
+            }
+        }
+
+        function toggleAllQuestions(select) {
+            const checkboxes = document.querySelectorAll('.question-checkbox');
+            checkboxes.forEach(function (cb) {
+                if (!cb.disabled) {
+                    cb.checked = select;
+                }
+            });
+            recalculateMarks();
+        }
+
+        // Initialize calculation on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            recalculateMarks();
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>

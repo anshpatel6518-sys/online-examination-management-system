@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Exam Instructions - ' + ${exam.title})}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'exams' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('exams')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0" style="max-width: 860px;">
+
+                <!-- Page Header with Back Button -->
+                <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1">Examination Instructions</h1>
+                        <p class="text-secondary small mb-0">Please review the rules, duration, and evaluation criteria carefully before commencing.</p>
+                    </div>
+                    <a th:href="@{/student/exams}" class="btn btn-outline-dark btn-sm py-1 px-3">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Exams
+                    </a>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Exam Overview Card -->
+                <div class="card border mb-4">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold text-dark" th:text="${exam.title}">Mid-Term Examination</span>
+                            <span class="badge bg-white text-dark border" th:text="${exam.course.code}">CS101</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3 mb-4">
+                            <div class="col-6 col-md-3 border-end">
+                                <div class="text-secondary small">Course</div>
+                                <div class="fw-semibold text-dark" th:text="${exam.course.name}">Computer Science</div>
+                            </div>
+                            <div class="col-6 col-md-3 border-end">
+                                <div class="text-secondary small">Duration</div>
+                                <div class="fw-semibold text-dark"><span th:text="${exam.durationMinutes}">60</span> minutes</div>
+                            </div>
+                            <div class="col-6 col-md-3 border-end">
+                                <div class="text-secondary small">Total Questions</div>
+                                <div class="fw-semibold text-dark"><span th:text="${exam.questions.size()}">20</span> Questions</div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-secondary small">Total / Passing Marks</div>
+                                <div class="fw-semibold text-dark">
+                                    <span th:text="${exam.totalMarks}">100</span> / <span th:text="${exam.passingMarks}">40</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Marking Scheme Notice -->
+                        <div class="p-3 bg-light rounded border mb-4">
+                            <h6 class="fw-semibold text-dark mb-2">
+                                <i class="bi bi-calculator me-1"></i> Evaluation Scheme
+                            </h6>
+                            <ul class="mb-0 small text-secondary ps-3">
+                                <li>Each question carries the marks indicated alongside its statement.</li>
+                                <li th:if="${exam.negativeMarking}">
+                                    <span class="fw-semibold text-danger">Negative Marking is ACTIVE:</span> 
+                                    <span th:text="${exam.negativeMarkValue}">0.25</span> marks will be deducted for each incorrect answer. Unanswered questions do not incur penalties.
+                                </li>
+                                <li th:unless="${exam.negativeMarking}">
+                                    <span class="fw-semibold text-success">No Negative Marking:</span> Incorrect answers do not incur score deductions.
+                                </li>
+                                <li th:if="${exam.shuffleQuestions}">
+                                    Question order is randomized individually for your session.
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- General Examination Rules -->
+                        <h6 class="fw-semibold text-dark mb-2">Examination Guidelines &amp; Navigation Rules</h6>
+                        <ol class="small text-secondary ps-3 mb-4">
+                            <li class="mb-1"><strong>Countdown Timer:</strong> The session timer runs continuously once started on the server. If you refresh or briefly disconnect, the timer continues.</li>
+                            <li class="mb-1"><strong>Question Palette:</strong> The right-side palette allows you to jump directly to any question. Colors represent status:
+                                <span class="badge bg-success text-white ms-1 me-1">Green</span> = Answered, 
+                                <span class="badge bg-warning text-dark ms-1 me-1">Amber</span> = Marked for Review, 
+                                <span class="badge bg-light text-secondary border ms-1">Grey</span> = Unvisited / Unanswered.
+                            </li>
+                            <li class="mb-1"><strong>Autosave:</strong> Every choice selection and answer clear action is automatically saved to the institutional server immediately.</li>
+                            <li class="mb-1"><strong>Time Expiration:</strong> When the countdown timer reaches 00:00, your exam will automatically submit and finalize.</li>
+                            <li><strong>Academic Integrity:</strong> Navigating away or closing the browser window does not pause the session. Ensure a stable network connection before starting.</li>
+                        </ol>
+
+                        <!-- Acknowledgment and Start Form -->
+                        <form th:action="@{/student/exams/{id}/start(id=${exam.id})}" method="post">
+                            <div class="card border p-3 mb-4 bg-light">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="acknowledged" id="acknowledgedCheck" value="true" required onchange="toggleStartButton()" />
+                                    <label class="form-check-label fw-medium text-dark" for="acknowledgedCheck">
+                                        I have read, understood, and agree to abide by all the examination rules and instructions stated above.
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a th:href="@{/student/exams}" class="btn btn-outline-dark btn-sm py-2 px-3">
+                                    Cancel &amp; Return
+                                </a>
+                                <button type="submit" id="startExamBtn" class="btn btn-dark btn-sm py-2 px-4" disabled>
+                                    <i class="bi bi-pencil-square me-1"></i> Begin Examination
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <script>
+        function toggleStartButton() {
+            const checkbox = document.getElementById('acknowledgedCheck');
+            const btn = document.getElementById('startExamBtn');
+            if (checkbox && btn) {
+                btn.disabled = !checkbox.checked;
+            }
+        }
+    </script>
+</body>
+</html>

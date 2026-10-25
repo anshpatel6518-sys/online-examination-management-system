@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Available Exams')}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'exams' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('exams')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0">
+
+                <!-- Page Header -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center pb-3 mb-4 border-bottom gap-2">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1">Available Examinations</h1>
+                        <p class="text-secondary small mb-0">Scheduled and ongoing examination sessions for your enrolled courses.</p>
+                    </div>
+                    <span class="badge bg-light text-secondary border px-3 py-2 small">
+                        Enrolled Courses: <span class="fw-bold text-dark" th:text="${enrolledCourses != null ? enrolledCourses.size() : 0}">0</span>
+                    </span>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Enrolled Courses Summary Tags -->
+                <div class="mb-4" th:if="${enrolledCourses != null and not enrolledCourses.empty}">
+                    <div class="small fw-semibold text-secondary mb-2">My Enrolled Courses:</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span th:each="c : ${enrolledCourses}" class="badge bg-light text-dark border px-2 py-1">
+                            <span class="fw-semibold text-dark" th:text="${c.code}">CS101</span>: <span th:text="${c.name}">Computer Science</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Not Enrolled Notice -->
+                <div th:if="${enrolledCourses == null or enrolledCourses.empty}" class="alert alert-warning border d-flex align-items-center gap-2 mb-4 py-2 px-3 small" role="alert">
+                    <i class="bi bi-info-circle-fill text-warning"></i>
+                    <span>You are not currently enrolled in any courses. Please contact the portal administrator to assign courses to your account.</span>
+                </div>
+
+                <!-- Available Exams Table Card -->
+                <div class="card border mb-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Course</th>
+                                    <th>Duration</th>
+                                    <th>Total Marks</th>
+                                    <th>Passing Marks</th>
+                                    <th>Schedule Window</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${studentExams == null or studentExams.empty}">
+                                    <td colspan="8" class="text-center py-5">
+                                        <div th:replace="~{layout/alerts :: emptyState('bi-journal-x', 'No Published Exams', 'There are no active or published exams available for your enrolled courses right now.')}"></div>
+                                    </td>
+                                </tr>
+                                <tr th:each="e : ${studentExams}">
+                                    <!-- Title -->
+                                    <td class="fw-semibold text-dark">
+                                        <span th:text="${e.title}">Mid-Term Exam</span>
+                                        <div class="text-secondary small" th:if="${e.negativeMarking}">
+                                            <i class="bi bi-shield-exclamation text-warning me-1"></i>Negative marking (-<span th:text="${e.negativeMarkValue}">0.25</span>)
+                                        </div>
+                                    </td>
+
+                                    <!-- Course -->
+                                    <td>
+                                        <span class="badge bg-light text-dark border" th:text="${e.courseCode}">CS101</span>
+                                        <div class="text-secondary small" th:text="${e.courseName}">Data Structures</div>
+                                    </td>
+
+                                    <!-- Duration -->
+                                    <td>
+                                        <span th:text="${e.durationMinutes}">60</span> mins
+                                    </td>
+
+                                    <!-- Total Marks -->
+                                    <td>
+                                        <span class="fw-semibold text-dark" th:text="${e.totalMarks}">100</span>
+                                    </td>
+
+                                    <!-- Passing Marks -->
+                                    <td>
+                                        <span class="text-secondary" th:text="${e.passingMarks}">40</span>
+                                    </td>
+
+                                    <!-- Schedule Window -->
+                                    <td>
+                                        <div th:if="${e.startTime != null or e.endTime != null}" class="small">
+                                            <div th:if="${e.startTime != null}">
+                                                <i class="bi bi-calendar-event me-1 text-secondary"></i>
+                                                <span th:text="${#temporals.format(e.startTime, 'dd MMM yyyy, HH:mm')}">24 Oct 2026, 10:00</span>
+                                            </div>
+                                            <div th:if="${e.endTime != null}" class="text-secondary">
+                                                <i class="bi bi-clock-history me-1"></i>
+                                                Until: <span th:text="${#temporals.format(e.endTime, 'dd MMM yyyy, HH:mm')}">24 Oct 2026, 12:00</span>
+                                            </div>
+                                        </div>
+                                        <span th:if="${e.startTime == null and e.endTime == null}" class="text-secondary small">Always Open</span>
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${e.status == 'Ongoing' ? 'bg-success text-white' : (e.status == 'Upcoming' ? 'bg-info-subtle text-dark border' : (e.status == 'Completed' ? 'bg-secondary text-white' : 'bg-light text-dark border'))}"
+                                              th:text="${e.status}">
+                                            Ongoing
+                                        </span>
+                                    </td>
+
+                                    <!-- Action Button with Window & Attempt Validation -->
+                                    <td class="text-end">
+                                        <!-- Enabled Start / Resume Links -->
+                                        <a th:if="${!e.buttonDisabled and e.actionUrl != null}" 
+                                           th:href="@{${e.actionUrl}}" 
+                                           class="btn btn-sm py-1 px-3"
+                                           th:classappend="${e.buttonClass}">
+                                            <i th:class="${e.canResume ? 'bi bi-play-circle me-1' : 'bi bi-pencil-square me-1'}"></i>
+                                            <span th:text="${e.buttonLabel}">Start Exam</span>
+                                        </a>
+
+                                        <!-- Disabled Button for Completed / Closed / Upcoming -->
+                                        <button th:if="${e.buttonDisabled}" 
+                                                type="button" 
+                                                class="btn btn-sm py-1 px-3"
+                                                th:classappend="${e.buttonClass}"
+                                                disabled>
+                                            <i th:if="${e.hasAttempted}" class="bi bi-check2-circle me-1"></i>
+                                            <span th:text="${e.buttonLabel}">Completed</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+</body>
+</html>

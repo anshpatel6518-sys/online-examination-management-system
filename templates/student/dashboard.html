@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Student Dashboard')}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'dashboard' as active menu -->
+        <div th:replace="~{layout/sidebar :: sidebar('dashboard')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0">
+
+                <!-- Page Header -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center pb-3 mb-4 border-bottom gap-2">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1">Student Dashboard</h1>
+                        <p class="text-secondary small mb-0">
+                            Welcome, <span class="fw-semibold text-dark" th:text="${user != null ? user.fullName : #authentication.name}">Student</span>. View available examinations and your performance results.
+                        </p>
+                    </div>
+                    <span class="badge bg-light text-dark border px-3 py-2 small">
+                        Role: STUDENT
+                    </span>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Real Stat Cards Grid -->
+                <div class="row g-3 mb-4">
+                    <!-- Stat Card 1 -->
+                    <div class="col-12 col-sm-4">
+                        <div class="stat-card">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label">Enrolled Courses</span>
+                                <div class="stat-icon">
+                                    <i class="bi bi-journal-bookmark"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" th:text="${enrolledCourses != null ? enrolledCourses.size() : 0}">0</div>
+                            <div class="text-secondary small mt-1">Assigned by administration</div>
+                        </div>
+                    </div>
+
+                    <!-- Stat Card 2 -->
+                    <div class="col-12 col-sm-4">
+                        <div class="stat-card">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label">Available Exams</span>
+                                <div class="stat-icon">
+                                    <i class="bi bi-pencil-square"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" th:text="${studentExams != null ? studentExams.size() : 0}">0</div>
+                            <div class="text-secondary small mt-1">Scheduled for enrolled courses</div>
+                        </div>
+                    </div>
+
+                    <!-- Stat Card 3 -->
+                    <div class="col-12 col-sm-4">
+                        <div class="stat-card">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label">Completed Exams</span>
+                                <div class="stat-icon">
+                                    <i class="bi bi-check2-circle"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value">
+                                <span th:text="${studentExams != null ? studentExams.?[hasAttempted].size() : 0}">0</span>
+                            </div>
+                            <div class="text-secondary small mt-1">Submitted sessions</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Exams Table Component -->
+                <div class="card border mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">Published Examinations</span>
+                        <a th:href="@{/student/exams}" class="btn btn-outline-dark btn-sm py-0 px-2" style="font-size: 0.8rem;">
+                            View All <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Exam Title</th>
+                                    <th>Course</th>
+                                    <th>Duration</th>
+                                    <th>Total Marks</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${studentExams == null or studentExams.empty}">
+                                    <td colspan="6" class="text-center py-4">
+                                        <div th:replace="~{layout/alerts :: emptyState('bi-journal-x', 'No Published Exams', 'There are no active or scheduled exams for your enrolled courses right now.')}"></div>
+                                    </td>
+                                </tr>
+                                <tr th:each="e : ${studentExams}">
+                                    <td class="fw-semibold text-dark" th:text="${e.title}">Mid-Term Assessment</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border me-1" th:text="${e.courseCode}">CS101</span>
+                                        <span class="text-secondary small" th:text="${e.courseName}">Course</span>
+                                    </td>
+                                    <td><span th:text="${e.durationMinutes}">60</span> mins</td>
+                                    <td class="fw-semibold text-dark" th:text="${e.totalMarks}">50</td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${e.status == 'Ongoing' ? 'bg-success text-white' : (e.status == 'Upcoming' ? 'bg-info-subtle text-dark border' : (e.status == 'Completed' ? 'bg-secondary text-white' : 'bg-light text-dark border'))}"
+                                              th:text="${e.status}">
+                                            Ongoing
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <!-- Enabled Start / Resume Links -->
+                                        <a th:if="${!e.buttonDisabled and e.actionUrl != null}" 
+                                           th:href="@{${e.actionUrl}}" 
+                                           class="btn btn-sm py-1 px-3"
+                                           th:classappend="${e.buttonClass}">
+                                            <i th:class="${e.canResume ? 'bi bi-play-circle me-1' : 'bi bi-pencil-square me-1'}"></i>
+                                            <span th:text="${e.buttonLabel}">Start Exam</span>
+                                        </a>
+
+                                        <!-- Disabled Button -->
+                                        <button th:if="${e.buttonDisabled}" 
+                                                type="button" 
+                                                class="btn btn-sm py-1 px-3"
+                                                th:classappend="${e.buttonClass}"
+                                                disabled>
+                                            <i th:if="${e.hasAttempted}" class="bi bi-check2-circle me-1"></i>
+                                            <span th:text="${e.buttonLabel}">Completed</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <!-- Bootstrap Scripts Fragment -->
+    <th:block th:replace="~{layout/base :: scripts}"></th:block>
+</body>
+</html>

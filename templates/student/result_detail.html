@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('Result - ' + ${result.examTitle})}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'results' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('results')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0" style="max-width: 980px;">
+
+                <!-- Page Header with Back Button -->
+                <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1">Examination Scorecard</h1>
+                        <p class="text-secondary small mb-0">
+                            Assessment breakdown for <span class="fw-semibold text-dark" th:text="${result.examTitle}">Exam Title</span> 
+                            (<span th:text="${result.courseCode}">CS101</span>).
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/student/results/{attemptId}/pdf (attemptId=${result.attemptId})}" class="btn btn-outline-dark btn-sm py-1 px-3">
+                            <i class="bi bi-file-earmark-pdf me-1 text-danger"></i> Download PDF
+                        </a>
+                        <a th:href="@{/student/results}" class="btn btn-outline-secondary btn-sm py-1 px-3">
+                            <i class="bi bi-arrow-left me-1"></i> Back to My Results
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Top Score Card -->
+                <div class="card border mb-4 bg-light">
+                    <div class="card-body p-4">
+                        <div class="row g-3 align-items-center">
+                            
+                            <!-- Score & Percentage -->
+                            <div class="col-12 col-md-5">
+                                <div class="text-secondary small text-uppercase fw-semibold mb-1">Score Obtained</div>
+                                <div class="d-flex align-items-baseline gap-2">
+                                    <span class="fs-1 fw-bold text-dark" th:text="${result.score}">45.0</span>
+                                    <span class="fs-5 text-secondary">/ <span th:text="${result.totalMarks}">50.0</span> marks</span>
+                                    <span class="badge bg-white text-dark border ms-2 fs-6" th:text="${result.percentage + '%'}">90.0%</span>
+                                </div>
+                                <div class="text-secondary small mt-1">
+                                    Submitted on <span th:text="${#temporals.format(result.submittedAt, 'dd MMM yyyy, HH:mm')}">24 Oct 2026, 17:30</span>
+                                </div>
+                            </div>
+
+                            <!-- Pass / Fail Badge & Passing Standard -->
+                            <div class="col-12 col-md-4 border-start-md ps-md-4">
+                                <div class="text-secondary small text-uppercase fw-semibold mb-1">Result Decision</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge fs-6 px-3 py-2 fw-semibold"
+                                          th:classappend="${result.passed ? 'bg-success text-white' : 'bg-danger text-white'}"
+                                          th:text="${result.passed ? 'PASSED' : 'FAILED'}">
+                                        PASSED
+                                    </span>
+                                </div>
+                                <div class="text-secondary small mt-1">
+                                    Passing threshold: <span class="fw-medium text-dark" th:text="${result.passingMarks}">40</span> marks
+                                </div>
+                            </div>
+
+                            <!-- Candidate Detail -->
+                            <div class="col-12 col-md-3 border-start-md ps-md-4">
+                                <div class="text-secondary small text-uppercase fw-semibold mb-1">Candidate</div>
+                                <div class="fw-semibold text-dark" th:text="${user.fullName}">Student Name</div>
+                                <div class="text-secondary small" th:text="${user.email}">student@exam.com</div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Metric Tiles -->
+                <div class="row g-3 mb-4">
+                    <!-- Total Questions -->
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card">
+                            <span class="stat-label">Total Questions</span>
+                            <div class="stat-value" th:text="${result.totalQuestions}">20</div>
+                            <div class="text-secondary small mt-1">Assessment items</div>
+                        </div>
+                    </div>
+
+                    <!-- Correct Answers -->
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card">
+                            <span class="stat-label text-success">Correct Answers</span>
+                            <div class="stat-value text-success" th:text="${result.correctCount}">18</div>
+                            <div class="text-secondary small mt-1">Full marks awarded</div>
+                        </div>
+                    </div>
+
+                    <!-- Wrong Answers -->
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card">
+                            <span class="stat-label text-danger">Wrong Answers</span>
+                            <div class="stat-value text-danger" th:text="${result.wrongCount}">2</div>
+                            <div class="text-secondary small mt-1">Incorrect selections</div>
+                        </div>
+                    </div>
+
+                    <!-- Unattempted -->
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card">
+                            <span class="stat-label">Unattempted</span>
+                            <div class="stat-value text-secondary" th:text="${result.unattemptedCount}">0</div>
+                            <div class="text-secondary small mt-1">No marks deducted</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question-Wise Evaluation Review (Shown only if instructor allows it) -->
+                <div th:if="${result.allowReview}">
+                    <div class="card border mb-4">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold text-dark">Question-by-Question Performance Review</span>
+                            <span class="badge bg-light text-secondary border">Instructor Verified</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Question Statement</th>
+                                        <th>Your Answer</th>
+                                        <th>Correct Answer</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Marks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="q : ${result.reviewList}">
+                                        <td class="fw-semibold text-secondary" th:text="${q.index}">1</td>
+                                        
+                                        <!-- Statement -->
+                                        <td class="fw-medium text-dark" style="max-width: 380px;">
+                                            <span th:text="${q.questionText}">Question statement</span>
+                                        </td>
+
+                                        <!-- Your Answer -->
+                                        <td>
+                                            <span th:text="${q.studentAnswerText}" 
+                                                  th:classappend="${q.correct ? 'fw-medium text-success' : (q.attempted ? 'fw-medium text-danger' : 'text-secondary fst-italic')}">
+                                                Your option
+                                            </span>
+                                        </td>
+
+                                        <!-- Correct Answer -->
+                                        <td class="fw-medium text-dark">
+                                            <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                            <span th:text="${q.correctAnswerText}">Correct option</span>
+                                        </td>
+
+                                        <!-- Status Badge -->
+                                        <td>
+                                            <span class="badge" th:classappend="${q.statusBadgeClass}" th:text="${q.statusLabel}">
+                                                Correct
+                                            </span>
+                                        </td>
+
+                                        <!-- Marks Awarded -->
+                                        <td class="text-end fw-semibold">
+                                            <span th:classappend="${q.marksAwarded > 0 ? 'text-success' : (q.marksAwarded < 0 ? 'text-danger' : 'text-secondary')}">
+                                                <span th:if="${q.marksAwarded > 0}">+</span><span th:text="${q.marksAwarded}">1.0</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review Restricted Notice -->
+                <div th:unless="${result.allowReview}" class="card border p-4 text-center mb-4 bg-light">
+                    <div class="empty-state py-4">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-eye-slash"></i>
+                        </div>
+                        <h6 class="fw-semibold text-dark mb-1">Question Review Restricted</h6>
+                        <p class="text-secondary small mb-0">
+                            The course instructor has configured this examination to restrict question-wise answer keys and detailed response breakdowns. Your total score and pass/fail evaluation above remain final.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+</body>
+</html>

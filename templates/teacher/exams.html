@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('My Exams')}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'exams' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('exams')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0">
+
+                <!-- Page Header with Action Button -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center pb-3 mb-4 border-bottom gap-2">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1">My Examinations</h1>
+                        <p class="text-secondary small mb-0">Configure, schedule, select questions, and publish exam assessments for your courses.</p>
+                    </div>
+                    <div>
+                        <a th:href="@{/teacher/exams/new}" class="btn btn-dark btn-sm py-2 px-3">
+                            <i class="bi bi-plus-lg me-1"></i> Create Exam
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Exams Table Card -->
+                <div class="card border mb-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Course</th>
+                                    <th>Duration</th>
+                                    <th>Marks (Total / Pass)</th>
+                                    <th>Schedule</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${exams == null or exams.empty}">
+                                    <td colspan="7" class="text-center py-5">
+                                        <div th:replace="~{layout/alerts :: emptyState('bi-file-earmark-text', 'No Exams Created', 'Click \'Create Exam\' above to schedule your first examination session.')}"></div>
+                                    </td>
+                                </tr>
+                                <tr th:each="e : ${exams}">
+                                    <!-- Title -->
+                                    <td class="fw-semibold text-dark">
+                                        <span th:text="${e.title}">Mid-Term Exam</span>
+                                        <div class="text-secondary small" th:if="${e.negativeMarking}">
+                                            <i class="bi bi-dash-circle text-danger me-1"></i>Negative Marking (-<span th:text="${e.negativeMarkValue}">0.25</span>)
+                                        </div>
+                                    </td>
+
+                                    <!-- Course -->
+                                    <td>
+                                        <span class="badge bg-light text-dark border" th:text="${e.course.code}">CS101</span>
+                                    </td>
+
+                                    <!-- Duration -->
+                                    <td class="small text-secondary" th:text="${e.durationMinutes} + ' mins'">60 mins</td>
+
+                                    <!-- Marks -->
+                                    <td>
+                                        <span class="fw-bold text-dark" th:text="${e.totalMarks}">100</span>
+                                        <span class="text-secondary small">/ pass <span th:text="${e.passingMarks}">40</span></span>
+                                    </td>
+
+                                    <!-- Schedule (Start & End) -->
+                                    <td class="small text-secondary">
+                                        <div th:if="${e.startTime != null}">
+                                            <span class="text-dark fw-medium">Start:</span> <span th:text="${#temporals.format(e.startTime, 'dd MMM yyyy, HH:mm')}">Date</span>
+                                        </div>
+                                        <div th:if="${e.endTime != null}">
+                                            <span class="text-dark fw-medium">End:</span> <span th:text="${#temporals.format(e.endTime, 'dd MMM yyyy, HH:mm')}">Date</span>
+                                        </div>
+                                        <div th:if="${e.startTime == null and e.endTime == null}" class="fst-italic text-muted">
+                                            No time window set
+                                        </div>
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td>
+                                        <span th:if="${e.status == 'Draft'}" class="badge bg-light text-dark border">Draft</span>
+                                        <span th:if="${e.status == 'Scheduled'}" class="badge bg-light text-secondary border">Scheduled</span>
+                                        <span th:if="${e.status == 'Ongoing'}" class="badge-status-pass badge px-2 py-1">Ongoing</span>
+                                        <span th:if="${e.status == 'Completed'}" class="badge bg-light text-dark border">Completed</span>
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1">
+                                            
+                                            <!-- Results Link -->
+                                            <a th:href="@{/teacher/exams/{id}/results(id=${e.id})}" 
+                                               class="btn btn-dark btn-sm py-0 px-2"
+                                               title="View Performance Results">
+                                                Results
+                                            </a>
+
+                                            <!-- Questions Checklist Link with count -->
+                                            <a th:href="@{/teacher/exams/{id}/questions(id=${e.id})}" 
+                                               class="btn btn-outline-dark btn-sm py-0 px-2"
+                                               title="Select Questions">
+                                                Questions (<span th:text="${e.questions != null ? e.questions.size() : 0}">0</span>)
+                                            </a>
+
+                                            <!-- Edit Settings -->
+                                            <a th:href="@{/teacher/exams/edit/{id}(id=${e.id})}" 
+                                               class="btn btn-outline-dark btn-sm py-0 px-2"
+                                               title="Edit Exam Configuration">
+                                                Edit
+                                            </a>
+
+                                            <!-- Publish / Unpublish Toggle -->
+                                            <form th:action="@{/teacher/exams/{id}/toggle-publish(id=${e.id})}" method="post" class="d-inline">
+                                                <button type="submit" 
+                                                        class="btn btn-sm py-0 px-2"
+                                                        th:classappend="${e.published ? 'btn-outline-secondary' : 'btn-outline-dark'}"
+                                                        th:title="${e.published ? 'Unpublish exam' : 'Publish exam'}">
+                                                    <span th:text="${e.published ? 'Unpublish' : 'Publish'}">Publish</span>
+                                                </button>
+                                            </form>
+
+                                            <!-- Delete Button opening modal -->
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger btn-sm py-0 px-2"
+                                                    data-bs-toggle="modal" 
+                                                    th:data-bs-target="'#deleteExamModal' + ${e.id}"
+                                                    title="Delete Exam">
+                                                Delete
+                                            </button>
+                                        </div>
+
+                                        <!-- Delete Confirmation Modal -->
+                                        <div class="modal fade" 
+                                             th:id="'deleteExamModal' + ${e.id}" 
+                                             tabindex="-1" 
+                                             aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content border text-start">
+                                                    <div class="modal-header border-bottom bg-light">
+                                                        <h5 class="modal-title fs-6 fw-semibold text-dark">Confirm Exam Deletion</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p class="mb-1 text-dark">
+                                                            Are you sure you want to permanently delete this exam:
+                                                        </p>
+                                                        <p class="fw-bold text-dark mb-3" th:text="${e.title} + ' (' + ${e.course.code} + ')'"></p>
+                                                        <p class="text-secondary small mb-0">
+                                                            Note: An exam cannot be deleted if students have already recorded attempts.
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer border-top bg-light">
+                                                        <button type="button" class="btn btn-outline-dark btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                        <form th:action="@{/teacher/exams/{id}/delete(id=${e.id})}" method="post">
+                                                            <button type="submit" class="btn btn-danger btn-sm">Confirm Delete</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <!-- Bootstrap Scripts Fragment -->
+    <th:block th:replace="~{layout/base :: scripts}"></th:block>
+</body>
+</html>

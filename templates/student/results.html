@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('My Results')}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'results' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('results')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0">
+
+                <!-- Page Header -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center pb-3 mb-4 border-bottom gap-2">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1">My Examination Results</h1>
+                        <p class="text-secondary small mb-0">Review performance history, grade breakdowns, and scorecards for completed assessment sessions.</p>
+                    </div>
+                    <span class="badge bg-light text-secondary border px-3 py-2 small">
+                        Completed: <span class="fw-bold text-dark" th:text="${resultsHistory != null ? resultsHistory.size() : 0}">0</span>
+                    </span>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Results History Table Card -->
+                <div class="card border mb-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Examination</th>
+                                    <th>Course</th>
+                                    <th>Submitted At</th>
+                                    <th>Score</th>
+                                    <th>Percentage</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${resultsHistory == null or resultsHistory.empty}">
+                                    <td colspan="7" class="text-center py-5">
+                                        <div th:replace="~{layout/alerts :: emptyState('bi-award', 'No Results Yet', 'You have not completed any examination sessions yet. Submitted exams will appear here with score breakdowns.')}"></div>
+                                    </td>
+                                </tr>
+                                <tr th:each="r : ${resultsHistory}">
+                                    <!-- Title -->
+                                    <td class="fw-semibold text-dark">
+                                        <span th:text="${r.examTitle}">Mid-Term Exam</span>
+                                    </td>
+
+                                    <!-- Course -->
+                                    <td>
+                                        <span class="badge bg-light text-dark border" th:text="${r.courseCode}">CS101</span>
+                                        <div class="text-secondary small" th:text="${r.courseName}">Data Structures</div>
+                                    </td>
+
+                                    <!-- Submitted Date -->
+                                    <td>
+                                        <div class="small">
+                                            <i class="bi bi-calendar-check me-1 text-secondary"></i>
+                                            <span th:text="${#temporals.format(r.submittedAt, 'dd MMM yyyy, HH:mm')}">24 Oct 2026, 17:30</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Score -->
+                                    <td>
+                                        <span class="fw-bold text-dark" th:text="${r.score}">45.0</span>
+                                        <span class="text-secondary small">/ <span th:text="${r.totalMarks}">50.0</span></span>
+                                    </td>
+
+                                    <!-- Percentage -->
+                                    <td>
+                                        <span class="fw-semibold text-dark" th:text="${r.percentage + '%'}">90.0%</span>
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${r.passed ? 'bg-success text-white' : 'bg-danger text-white'}"
+                                              th:text="${r.passed ? 'PASSED' : 'FAILED'}">
+                                            PASSED
+                                        </span>
+                                    </td>
+
+                                    <!-- Action Button -->
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1">
+                                            <a th:href="@{/student/results/{id}(id=${r.attemptId})}" class="btn btn-outline-dark btn-sm py-1 px-2" title="View Result Scorecard">
+                                                <i class="bi bi-file-earmark-text me-1"></i> View Result
+                                            </a>
+                                            <a th:href="@{/student/results/{id}/pdf(id=${r.attemptId})}" class="btn btn-outline-dark btn-sm py-1 px-2" title="Download Official Scorecard PDF">
+                                                <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+</body>
+</html>

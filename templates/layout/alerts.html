@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <!-- Flash Messages Fragment -->
+    <div th:fragment="alerts">
+        <!-- Success Alert -->
+        <div th:if="${successMessage != null or param.success != null}" 
+             class="alert-portal-success d-flex align-items-center gap-2 mb-4" 
+             role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${successMessage != null ? successMessage : (param.success != null and param.success[0] != 'true' ? param.success[0] : 'Operation completed successfully.')}">Success</span>
+        </div>
+
+        <!-- Error Alert -->
+        <div th:if="${errorMessage != null or (param.error != null and param.error[0] != 'true')}" 
+             class="alert-portal-danger d-flex align-items-center gap-2 mb-4" 
+             role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span th:text="${errorMessage != null ? errorMessage : param.error[0]}">An error occurred.</span>
+        </div>
+
+        <!-- Warning Alert -->
+        <div th:if="${warningMessage != null or param.warning != null}" 
+             class="alert alert-warning border d-flex align-items-center gap-2 mb-4 py-2 px-3 small" 
+             role="alert">
+            <i class="bi bi-exclamation-circle-fill text-warning"></i>
+            <span th:text="${warningMessage != null ? warningMessage : param.warning[0]}">Warning notice.</span>
+        </div>
+    </div>
+
+    <!-- Empty State Fragment -->
+    <div th:fragment="emptyState(icon, title, message)" class="card border">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i th:class="${icon != null ? icon : 'bi bi-inbox'}"></i>
+            </div>
+            <h5 class="h6 fw-semibold text-dark mb-1" th:text="${title}">No Records Found</h5>
+            <p class="text-secondary small mb-0" th:text="${message}">There are currently no items available to display.</p>
+        </div>
+    </div>
+
+</body>
+</html>

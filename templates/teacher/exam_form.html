@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(${isEdit ? 'Edit Exam' : 'Create Exam'})}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'exams' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('exams')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0" style="max-width: 820px;">
+
+                <!-- Page Header with Back Button -->
+                <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1" th:text="${isEdit ? 'Edit Examination' : 'Create Examination'}">Create Examination</h1>
+                        <p class="text-secondary small mb-0">Configure exam parameters, schedule, duration, and evaluation criteria.</p>
+                    </div>
+                    <a th:href="@{/teacher/exams}" class="btn btn-outline-dark btn-sm py-1 px-3">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Exams
+                    </a>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Warning Notice if Exam has Attempts -->
+                <div th:if="${isEdit and hasAttempts}" class="alert alert-warning border d-flex align-items-center gap-2 mb-4 py-2 px-3 small" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                    <span>This exam already has recorded student attempts. The assigned course cannot be altered and question selection is locked.</span>
+                </div>
+
+                <!-- Exam Form Card -->
+                <div class="card border mb-4">
+                    <div class="card-header">
+                        <span class="fw-semibold" th:text="${isEdit ? 'Exam Parameters' : 'New Exam Parameters'}">Exam Parameters</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="examForm"
+                              th:action="${isEdit ? '/teacher/exams/edit/' + exam.id : '/teacher/exams/new'}" 
+                              th:object="${exam}" 
+                              method="post">
+                            
+                            <input type="hidden" th:if="${isEdit}" th:field="*{id}" />
+
+                            <!-- Title Field -->
+                            <div class="mb-3">
+                                <label for="title" class="form-label small fw-medium text-dark">Exam Title <span class="text-danger">*</span></label>
+                                <input type="text" id="title" th:field="*{title}" class="form-control" placeholder="e.g. Mid-Term Examination 2026" required />
+                                <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <!-- Course Selection -->
+                            <div class="mb-3">
+                                <label for="courseId" class="form-label small fw-medium text-dark">Course <span class="text-danger">*</span></label>
+                                <select id="courseId" th:field="*{courseId}" class="form-select" th:disabled="${isEdit and hasAttempts}" required>
+                                    <option th:each="c : ${courses}" 
+                                            th:value="${c.id}" 
+                                            th:text="${c.code} + ' - ' + ${c.name}">
+                                        Course
+                                    </option>
+                                </select>
+                                <input type="hidden" th:if="${isEdit and hasAttempts}" name="courseId" th:value="*{courseId}" />
+                                <div th:if="${#fields.hasErrors('courseId')}" th:errors="*{courseId}" class="text-danger small mt-1"></div>
+                                <div class="form-text small text-secondary">Only courses assigned to you by administrators are listed.</div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <!-- Duration (Minutes) -->
+                                <div class="col-12 col-md-6">
+                                    <label for="durationMinutes" class="form-label small fw-medium text-dark">Duration (Minutes) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="number" id="durationMinutes" th:field="*{durationMinutes}" class="form-control" min="1" max="600" required />
+                                        <span class="input-group-text bg-light text-secondary small">min</span>
+                                    </div>
+                                    <div th:if="${#fields.hasErrors('durationMinutes')}" th:errors="*{durationMinutes}" class="text-danger small mt-1"></div>
+                                </div>
+
+                                <!-- Passing Marks -->
+                                <div class="col-12 col-md-6">
+                                    <label for="passingMarks" class="form-label small fw-medium text-dark">Passing Marks <span class="text-danger">*</span></label>
+                                    <input type="number" id="passingMarks" th:field="*{passingMarks}" class="form-control" min="0" required />
+                                    <div th:if="${#fields.hasErrors('passingMarks')}" th:errors="*{passingMarks}" class="text-danger small mt-1"></div>
+                                    <div class="form-text small text-secondary">Must not exceed the total marks of chosen questions.</div>
+                                </div>
+                            </div>
+
+                            <!-- Schedule: Start and End Date-Time -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-12 col-md-6">
+                                    <label for="startTime" class="form-label small fw-medium text-dark">Start Date &amp; Time</label>
+                                    <input type="datetime-local" id="startTime" th:field="*{startTime}" class="form-control" />
+                                    <div th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}" class="text-danger small mt-1"></div>
+                                    <div class="form-text small text-secondary">Time when examination window opens.</div>
+                                </div>
+
+                                <div class="col-12 col-md-6">
+                                    <label for="endTime" class="form-label small fw-medium text-dark">End Date &amp; Time</label>
+                                    <input type="datetime-local" id="endTime" th:field="*{endTime}" class="form-control" />
+                                    <div th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}" class="text-danger small mt-1"></div>
+                                    <div class="form-text small text-secondary">Time when examination window closes. Must be after start time.</div>
+                                </div>
+                            </div>
+
+                            <!-- Schedule Validation Client-Side Alert Container -->
+                            <div id="scheduleClientError" class="alert alert-danger border py-2 px-3 small d-none mb-3" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                <span>End date/time must be strictly after the start date/time.</span>
+                            </div>
+
+                            <hr class="my-4 border-light-subtle">
+
+                            <!-- Evaluation & Security Options -->
+                            <h6 class="fw-semibold text-dark mb-3">Evaluation &amp; Display Rules</h6>
+
+                            <!-- Negative Marking -->
+                            <div class="card bg-light border p-3 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="negativeMarking" th:field="*{negativeMarking}" onchange="toggleNegativeMarking()" />
+                                    <label class="form-check-label fw-medium text-dark" for="negativeMarking">
+                                        Enable Negative Marking
+                                    </label>
+                                    <div class="text-secondary small">Deduct marks for incorrect answers.</div>
+                                </div>
+
+                                <div id="negativeMarkValueGroup" class="mt-3 ps-4" style="max-width: 260px;" th:styleappend="*{negativeMarking} ? '' : 'display: none;'">
+                                    <label for="negativeMarkValue" class="form-label small fw-medium text-dark">Deduction per incorrect answer</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white text-secondary">-</span>
+                                        <input type="number" id="negativeMarkValue" th:field="*{negativeMarkValue}" class="form-control" min="0" max="5" step="0.25" placeholder="0.25" />
+                                        <span class="input-group-text bg-white text-secondary">marks</span>
+                                    </div>
+                                    <div class="form-text small text-secondary">Default is 0.25 marks penalty.</div>
+                                </div>
+                            </div>
+
+                            <!-- Question Shuffling -->
+                            <div class="card bg-light border p-3 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="shuffleQuestions" th:field="*{shuffleQuestions}" />
+                                    <label class="form-check-label fw-medium text-dark" for="shuffleQuestions">
+                                        Shuffle Questions
+                                    </label>
+                                    <div class="text-secondary small">Randomize question presentation order uniquely for each student attempt.</div>
+                                </div>
+                            </div>
+
+                            <!-- Allow Result Review / Show Answer Key -->
+                            <div class="card bg-light border p-3 mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="showAnswerKey" th:field="*{showAnswerKey}" />
+                                    <label class="form-check-label fw-medium text-dark" for="showAnswerKey">
+                                        Allow Question-Wise Result Review
+                                    </label>
+                                    <div class="text-secondary small">Allow students to review their answers alongside the correct answers after submitting.</div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-end gap-2 pt-2">
+                                <a th:href="@{/teacher/exams}" class="btn btn-outline-dark btn-sm py-2 px-3">Cancel</a>
+                                <button type="submit" class="btn btn-dark btn-sm py-2 px-4" th:text="${isEdit ? 'Save Changes' : 'Create &amp; Select Questions'}">
+                                    Create &amp; Select Questions
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <!-- Form Script -->
+    <script>
+        function toggleNegativeMarking() {
+            const checkbox = document.getElementById('negativeMarking');
+            const group = document.getElementById('negativeMarkValueGroup');
+            if (checkbox && group) {
+                group.style.display = checkbox.checked ? 'block' : 'none';
+            }
+        }
+
+        document.getElementById('examForm').addEventListener('submit', function (e) {
+            const startTimeInput = document.getElementById('startTime');
+            const endTimeInput = document.getElementById('endTime');
+            const errorDiv = document.getElementById('scheduleClientError');
+
+            if (startTimeInput.value && endTimeInput.value) {
+                const start = new Date(startTimeInput.value);
+                const end = new Date(endTimeInput.value);
+
+                if (end <= start) {
+                    e.preventDefault();
+                    errorDiv.classList.remove('d-none');
+                    endTimeInput.focus();
+                    return false;
+                }
+            }
+            errorDiv.classList.add('d-none');
+        });
+    </script>
+</body>
+</html>

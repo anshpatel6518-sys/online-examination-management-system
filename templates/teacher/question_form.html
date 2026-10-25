@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(${isEdit ? 'Edit Question' : 'Add Question'})}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'questions' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('questions')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0" style="max-width: 780px;">
+
+                <!-- Page Header with Back Button -->
+                <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1" th:text="${isEdit ? 'Edit Question' : 'Add New Question'}">Question Authoring</h1>
+                        <p class="text-secondary small mb-0">Author MCQ or True/False evaluation questions for your assigned course.</p>
+                    </div>
+                    <a th:href="@{/teacher/questions}" class="btn btn-outline-dark btn-sm py-1 px-3">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Question Bank
+                    </a>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Question Form Card -->
+                <div class="card border mb-4">
+                    <div class="card-header">
+                        <span class="fw-semibold" th:text="${isEdit ? 'Edit Question Details' : 'New Question Configuration'}">Question Configuration</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="${isEdit ? '/teacher/questions/edit/' + question.id : '/teacher/questions/new'}" 
+                              th:object="${question}" 
+                              method="post">
+                            
+                            <input type="hidden" th:if="${isEdit}" th:field="*{id}" />
+
+                            <!-- Course Selection -->
+                            <div class="mb-3">
+                                <label for="courseId" class="form-label small fw-medium text-dark">Course <span class="text-danger">*</span></label>
+                                <select id="courseId" th:field="*{courseId}" class="form-select" required>
+                                    <option th:each="c : ${courses}" 
+                                            th:value="${c.id}" 
+                                            th:text="${c.code} + ' - ' + ${c.name}">
+                                        Course
+                                    </option>
+                                </select>
+                                <div th:if="${#fields.hasErrors('courseId')}" th:errors="*{courseId}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <!-- Question Text -->
+                            <div class="mb-3">
+                                <label for="text" class="form-label small fw-medium text-dark">Question Statement <span class="text-danger">*</span></label>
+                                <textarea id="text" th:field="*{text}" class="form-control" rows="3" placeholder="Enter clear, concise question statement..." required></textarea>
+                                <div th:if="${#fields.hasErrors('text')}" th:errors="*{text}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <!-- Type, Marks, and Difficulty Row -->
+                            <div class="row g-3 mb-4">
+                                <!-- Type Selection -->
+                                <div class="col-12 col-md-4">
+                                    <label for="type" class="form-label small fw-medium text-dark">Question Type <span class="text-danger">*</span></label>
+                                    <select id="type" th:field="*{type}" class="form-select" onchange="toggleQuestionType()">
+                                        <option value="MCQ">Multiple Choice (MCQ)</option>
+                                        <option value="TRUE_FALSE">True / False</option>
+                                    </select>
+                                    <div th:if="${#fields.hasErrors('type')}" th:errors="*{type}" class="text-danger small mt-1"></div>
+                                </div>
+
+                                <!-- Marks -->
+                                <div class="col-12 col-md-4">
+                                    <label for="marks" class="form-label small fw-medium text-dark">Marks Value <span class="text-danger">*</span></label>
+                                    <input type="number" id="marks" th:field="*{marks}" class="form-control" min="1" required>
+                                    <div th:if="${#fields.hasErrors('marks')}" th:errors="*{marks}" class="text-danger small mt-1"></div>
+                                </div>
+
+                                <!-- Difficulty -->
+                                <div class="col-12 col-md-4">
+                                    <label for="difficulty" class="form-label small fw-medium text-dark">Difficulty Level <span class="text-danger">*</span></label>
+                                    <select id="difficulty" th:field="*{difficulty}" class="form-select" required>
+                                        <option th:each="d : ${difficulties}" th:value="${d}" th:text="${d}">Difficulty</option>
+                                    </select>
+                                    <div th:if="${#fields.hasErrors('difficulty')}" th:errors="*{difficulty}" class="text-danger small mt-1"></div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4 text-secondary">
+
+                            <!-- ================= Options Section ================= -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label small fw-semibold text-dark mb-0">
+                                        Answer Options & Correct Answer <span class="text-danger">*</span>
+                                    </label>
+                                    <span class="small text-secondary">Mark exactly one option as correct</span>
+                                </div>
+                                <div th:if="${#fields.hasErrors('correctOptionIndex')}" th:errors="*{correctOptionIndex}" class="text-danger small mb-2"></div>
+
+                                <!-- MCQ Options Container (Default) -->
+                                <div id="mcqOptionsContainer">
+                                    <div class="row g-2 mb-2 align-items-center">
+                                        <div class="col-auto">
+                                            <div class="form-check m-0">
+                                                <input class="form-check-input" type="radio" name="correctOptionIndex" id="opt0" value="0" th:checked="${question.correctOptionIndex == 0}">
+                                                <label class="form-check-label fw-bold text-dark small" for="opt0">A.</label>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <input type="text" name="options[0]" class="form-control form-control-sm" th:value="${question.options != null and question.options.size() > 0 ? question.options[0] : ''}" placeholder="Option A text">
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-2 align-items-center">
+                                        <div class="col-auto">
+                                            <div class="form-check m-0">
+                                                <input class="form-check-input" type="radio" name="correctOptionIndex" id="opt1" value="1" th:checked="${question.correctOptionIndex == 1}">
+                                                <label class="form-check-label fw-bold text-dark small" for="opt1">B.</label>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <input type="text" name="options[1]" class="form-control form-control-sm" th:value="${question.options != null and question.options.size() > 1 ? question.options[1] : ''}" placeholder="Option B text">
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-2 align-items-center">
+                                        <div class="col-auto">
+                                            <div class="form-check m-0">
+                                                <input class="form-check-input" type="radio" name="correctOptionIndex" id="opt2" value="2" th:checked="${question.correctOptionIndex == 2}">
+                                                <label class="form-check-label fw-bold text-dark small" for="opt2">C.</label>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <input type="text" name="options[2]" class="form-control form-control-sm" th:value="${question.options != null and question.options.size() > 2 ? question.options[2] : ''}" placeholder="Option C text">
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-2 align-items-center">
+                                        <div class="col-auto">
+                                            <div class="form-check m-0">
+                                                <input class="form-check-input" type="radio" name="correctOptionIndex" id="opt3" value="3" th:checked="${question.correctOptionIndex == 3}">
+                                                <label class="form-check-label fw-bold text-dark small" for="opt3">D.</label>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <input type="text" name="options[3]" class="form-control form-control-sm" th:value="${question.options != null and question.options.size() > 3 ? question.options[3] : ''}" placeholder="Option D text">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- True / False Options Container -->
+                                <div id="tfOptionsContainer" class="d-none border rounded p-3 bg-light">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="correctOptionIndex" id="tf0" value="0" th:checked="${question.correctOptionIndex == 0}">
+                                        <label class="form-check-label fw-semibold text-dark" for="tf0">
+                                            True
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="correctOptionIndex" id="tf1" value="1" th:checked="${question.correctOptionIndex == 1}">
+                                        <label class="form-check-label fw-semibold text-dark" for="tf1">
+                                            False
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top mt-4">
+                                <a th:href="@{/teacher/questions}" class="btn btn-outline-dark btn-sm px-3 py-2">Cancel</a>
+                                <button type="submit" class="btn btn-dark btn-sm px-4 py-2">
+                                    <i class="bi bi-check2 me-1"></i>
+                                    <span th:text="${isEdit ? 'Update Question' : 'Save Question'}">Save Question</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <!-- Bootstrap Scripts Fragment -->
+    <th:block th:replace="~{layout/base :: scripts}"></th:block>
+
+    <!-- Vanilla JS to toggle MCQ vs True/False UI -->
+    <script>
+        function toggleQuestionType() {
+            var typeSelect = document.getElementById('type');
+            var mcqContainer = document.getElementById('mcqOptionsContainer');
+            var tfContainer = document.getElementById('tfOptionsContainer');
+            
+            if (typeSelect.value === 'TRUE_FALSE') {
+                mcqContainer.classList.add('d-none');
+                tfContainer.classList.remove('d-none');
+            } else {
+                mcqContainer.classList.remove('d-none');
+                tfContainer.classList.add('d-none');
+            }
+        }
+        document.addEventListener('DOMContentLoaded', toggleQuestionType);
+    </script>
+</body>
+</html>

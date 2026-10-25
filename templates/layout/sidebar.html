@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+    <!-- Sidebar Fragment -->
+    <div th:fragment="sidebar(activePage)" class="offcanvas-lg offcanvas-start portal-sidebar" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+        
+        <!-- Mobile Offcanvas Header -->
+        <div class="offcanvas-header d-lg-none border-bottom px-3 py-2">
+            <h5 class="offcanvas-title fs-6 fw-bold text-dark" id="sidebarMenuLabel">Portal Navigation</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
+        </div>
+
+        <div class="offcanvas-body p-0">
+            <nav class="sidebar-nav w-100">
+
+                <!-- ==================== ADMIN MENU ==================== -->
+                <div sec:authorize="hasRole('ADMIN')">
+                    <div class="sidebar-heading">Administration</div>
+                    
+                    <a th:href="@{/admin/dashboard}" class="sidebar-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a th:href="@{/admin/users}" class="sidebar-link" th:classappend="${activePage == 'users' ? 'active' : ''}">
+                        <i class="bi bi-people"></i>
+                        <span>Users</span>
+                    </a>
+
+                    <a th:href="@{/admin/courses}" class="sidebar-link" th:classappend="${activePage == 'courses' ? 'active' : ''}">
+                        <i class="bi bi-journal-bookmark"></i>
+                        <span>Courses</span>
+                    </a>
+
+                    <a th:href="@{/admin/reports}" class="sidebar-link" th:classappend="${activePage == 'reports' ? 'active' : ''}">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Reports</span>
+                    </a>
+                </div>
+
+                <!-- ==================== TEACHER MENU ==================== -->
+                <div sec:authorize="hasRole('TEACHER')">
+                    <div class="sidebar-heading">Faculty Menu</div>
+
+                    <a th:href="@{/teacher/dashboard}" class="sidebar-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a th:href="@{/teacher/exams}" class="sidebar-link" th:classappend="${activePage == 'exams' ? 'active' : ''}">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span>My Exams</span>
+                    </a>
+
+                    <a th:href="@{/teacher/questions}" class="sidebar-link" th:classappend="${activePage == 'questions' ? 'active' : ''}">
+                        <i class="bi bi-question-square"></i>
+                        <span>Question Bank</span>
+                    </a>
+
+                    <a th:href="@{/teacher/results}" class="sidebar-link" th:classappend="${activePage == 'results' ? 'active' : ''}">
+                        <i class="bi bi-clipboard-data"></i>
+                        <span>Results</span>
+                    </a>
+                </div>
+
+                <!-- ==================== STUDENT MENU ==================== -->
+                <div sec:authorize="hasRole('STUDENT')">
+                    <div class="sidebar-heading">Student Portal</div>
+
+                    <a th:href="@{/student/dashboard}" class="sidebar-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a th:href="@{/student/exams}" class="sidebar-link" th:classappend="${activePage == 'exams' ? 'active' : ''}">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Available Exams</span>
+                    </a>
+
+                    <a th:href="@{/student/results}" class="sidebar-link" th:classappend="${activePage == 'results' ? 'active' : ''}">
+                        <i class="bi bi-award"></i>
+                        <span>My Results</span>
+                    </a>
+                </div>
+
+            </nav>
+        </div>
+    </div>
+
+</body>
+</html>

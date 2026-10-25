@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head('User Management')}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'users' as active menu -->
+        <div th:replace="~{layout/sidebar :: sidebar('users')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0">
+
+                <!-- Page Header -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center pb-3 mb-4 border-bottom gap-2">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1">User Management</h1>
+                        <p class="text-secondary small mb-0">
+                            Search, manage credentials, configure activation status, and onboard faculty.
+                        </p>
+                    </div>
+                    <div>
+                        <a th:href="@{/admin/users/new-teacher}" class="btn btn-dark btn-sm py-2 px-3">
+                            <i class="bi bi-person-plus me-1"></i> Add Teacher
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Search Filter Form -->
+                <div class="card border mb-4">
+                    <div class="card-body py-3">
+                        <form th:action="@{/admin/users}" method="get" class="row g-2 align-items-center">
+                            <div class="col-12 col-md-5">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white border-end-0 text-secondary"><i class="bi bi-search"></i></span>
+                                    <input type="text" name="search" th:value="${search}" class="form-control border-start-0" placeholder="Search by name or email...">
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-dark btn-sm px-3">Search</button>
+                            </div>
+                            <div class="col-auto" th:if="${search != null and !search.empty}">
+                                <a th:href="@{/admin/users}" class="btn btn-outline-dark btn-sm">Clear</a>
+                            </div>
+                            <div class="col text-end text-secondary small d-none d-md-block">
+                                Total Users: <strong class="text-dark" th:text="${totalItems}">0</strong>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Users Table Card -->
+                <div class="card border mb-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Full Name</th>
+                                    <th>Email Address</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Registration Date</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${users == null or users.empty}">
+                                    <td colspan="6" class="text-center py-4 text-secondary small">
+                                        No users matching your criteria were found.
+                                    </td>
+                                </tr>
+                                <tr th:each="u : ${users}">
+                                    <td class="fw-semibold text-dark" th:text="${u.fullName}">User Full Name</td>
+                                    <td th:text="${u.email}">user@exam.com</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border" th:text="${u.role}">STUDENT</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${u.enabled}" class="badge-status-pass badge px-2 py-1">Active</span>
+                                        <span th:if="${!u.enabled}" class="badge-status-fail badge px-2 py-1">Disabled</span>
+                                    </td>
+                                    <td class="text-secondary small" th:text="${#temporals.format(u.createdAt, 'dd MMM yyyy, HH:mm')}">
+                                        21 Oct 2026
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1">
+                                            
+                                            <!-- Enroll Student in Courses -->
+                                            <a th:if="${u.role.name() == 'STUDENT'}" 
+                                               th:href="@{/admin/users/{id}/enroll(id=${u.id})}" 
+                                               class="btn btn-outline-dark btn-sm py-0 px-2"
+                                               title="Enroll in courses">
+                                                Enroll
+                                            </a>
+
+                                            <!-- Toggle Status (Disabled if current logged in admin) -->
+                                            <form th:if="${u.email != #authentication.name}" 
+                                                  th:action="@{/admin/users/{id}/toggle-status(id=${u.id})}" 
+                                                  method="post" class="d-inline">
+                                                <button type="submit" 
+                                                        class="btn btn-outline-dark btn-sm py-0 px-2"
+                                                        th:title="${u.enabled ? 'Disable user' : 'Enable user'}">
+                                                    <span th:text="${u.enabled ? 'Disable' : 'Enable'}">Toggle</span>
+                                                </button>
+                                            </form>
+
+                                            <!-- Self-user indicator -->
+                                            <span th:if="${u.email == #authentication.name}" class="badge bg-light text-secondary border px-2 py-1 small">
+                                                Current User
+                                            </span>
+
+                                            <!-- Delete Button opening modal -->
+                                            <button th:if="${u.email != #authentication.name}" 
+                                                    type="button" 
+                                                    class="btn btn-outline-danger btn-sm py-0 px-2"
+                                                    data-bs-toggle="modal" 
+                                                    th:data-bs-target="'#deleteModal' + ${u.id}"
+                                                    title="Delete user">
+                                                Delete
+                                            </button>
+
+                                        </div>
+
+                                        <!-- Delete Confirmation Modal -->
+                                        <div th:if="${u.email != #authentication.name}" 
+                                             class="modal fade" 
+                                             th:id="'deleteModal' + ${u.id}" 
+                                             tabindex="-1" 
+                                             aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content border">
+                                                    <div class="modal-header border-bottom bg-light">
+                                                        <h5 class="modal-title fs-6 fw-semibold text-dark">Confirm Account Deletion</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body text-start">
+                                                        <p class="mb-1 text-dark">
+                                                            Are you sure you want to permanently delete the account for:
+                                                        </p>
+                                                        <p class="fw-bold text-dark mb-3" th:text="${u.fullName} + ' (' + ${u.email} + ')'"></p>
+                                                        <p class="text-secondary small mb-0">
+                                                            This action cannot be undone. Any linked associations will be updated.
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer border-top bg-light">
+                                                        <button type="button" class="btn btn-outline-dark btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                        <form th:action="@{/admin/users/{id}/delete(id=${u.id})}" method="post">
+                                                            <button type="submit" class="btn btn-danger btn-sm">Confirm Delete</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div th:if="${totalPages > 1}" class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center">
+                        <span class="text-secondary small">
+                            Page <strong class="text-dark" th:text="${currentPage + 1}">1</strong> of <strong class="text-dark" th:text="${totalPages}">1</strong>
+                        </span>
+                        <ul class="pagination pagination-sm mb-0">
+                            <!-- Previous -->
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                <a class="page-link text-dark" th:href="@{/admin/users(page=${currentPage - 1}, search=${search})}">Previous</a>
+                            </li>
+
+                            <!-- Page Numbers -->
+                            <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                                class="page-item" 
+                                th:classappend="${i == currentPage} ? 'active'">
+                                <a class="page-link" 
+                                   th:classappend="${i == currentPage} ? 'bg-dark text-white border-dark' : 'text-dark'" 
+                                   th:href="@{/admin/users(page=${i}, search=${search})}" 
+                                   th:text="${i + 1}">1</a>
+                            </li>
+
+                            <!-- Next -->
+                            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                                <a class="page-link text-dark" th:href="@{/admin/users(page=${currentPage + 1}, search=${search})}">Next</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <!-- Bootstrap Scripts Fragment -->
+    <th:block th:replace="~{layout/base :: scripts}"></th:block>
+</body>
+</html>
