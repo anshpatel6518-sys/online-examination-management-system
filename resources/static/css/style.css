@@ -1,0 +1,482 @@
+/* ==========================================================================
+   Online Examination Management System - Global Stylesheet
+   Theme: Strict Institutional White & Charcoal (#212529)
+   No blue accents, no dark mode, light grey borders, 8-12px card radii.
+   ========================================================================== */
+
+:root {
+    --bs-primary: #212529;
+    --bs-primary-rgb: 33, 37, 41;
+    --bs-body-bg: #ffffff;
+    --bs-body-color: #212529;
+    --bs-border-color: #e5e5e5;
+    --bs-secondary-color: #6c757d;
+
+    /* Theme colors */
+    --color-charcoal: #212529;
+    --color-muted: #6c757d;
+    --color-border: #e5e5e5;
+    --color-surface-light: #f8f9fa;
+    --color-white: #ffffff;
+
+    /* Semantic status colors (used solely where carrying meaning) */
+    --color-success: #198754;
+    --color-success-bg: #f0fdf4;
+    --color-success-border: #dcfce7;
+
+    --color-danger: #dc3545;
+    --color-danger-bg: #fef2f2;
+    --color-danger-border: #fee2e2;
+
+    --color-warning: #d97706;
+    --color-warning-bg: #fffbeb;
+    --color-warning-border: #fef3c7;
+}
+
+body {
+    background-color: var(--color-white);
+    color: var(--color-charcoal);
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.925rem;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+}
+
+/* Links: Charcoal with underline on hover */
+a {
+    color: var(--color-charcoal);
+    text-decoration: none;
+}
+
+a:hover {
+    color: #000000;
+    text-decoration: underline;
+}
+
+/* Button overrides: strictly charcoal and outline-charcoal */
+.btn-primary,
+.btn-dark {
+    background-color: var(--color-charcoal);
+    border-color: var(--color-charcoal);
+    color: #ffffff;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-dark:hover,
+.btn-dark:focus,
+.btn-dark:active {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+    color: #ffffff !important;
+    box-shadow: none;
+}
+
+.btn-outline-primary,
+.btn-outline-dark {
+    color: var(--color-charcoal);
+    border-color: var(--color-charcoal);
+    background-color: transparent;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active,
+.btn-outline-dark:hover,
+.btn-outline-dark:focus,
+.btn-outline-dark:active {
+    background-color: var(--color-charcoal) !important;
+    border-color: var(--color-charcoal) !important;
+    color: #ffffff !important;
+    box-shadow: none;
+}
+
+/* Form inputs & controls (no blue focus outlines) */
+.form-control,
+.form-select {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-charcoal);
+    font-size: 0.9rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-charcoal);
+    box-shadow: 0 0 0 0.15rem rgba(33, 37, 41, 0.12);
+    outline: none;
+}
+
+/* Cards: 1px border, 10px radius, very subtle shadow */
+.card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+    background-color: var(--color-surface-light);
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+    color: var(--color-charcoal);
+    padding: 0.85rem 1.25rem;
+    border-top-left-radius: 10px !important;
+    border-top-right-radius: 10px !important;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Tables */
+.table {
+    border-color: var(--color-border);
+    color: var(--color-charcoal);
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: var(--color-surface-light);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-charcoal);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.75rem 1rem;
+}
+
+.table td {
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #fafbfc;
+}
+
+/* Top Navbar */
+.portal-navbar {
+    background-color: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+/* Sidebar navigation */
+.portal-sidebar {
+    width: 250px;
+    min-height: calc(100vh - 57px);
+    background-color: var(--color-white);
+    border-right: 1px solid var(--color-border);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 0.75rem;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    color: var(--color-charcoal);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+}
+
+.sidebar-link:hover {
+    background-color: var(--color-surface-light);
+    color: #000000;
+    text-decoration: none;
+}
+
+.sidebar-link.active {
+    background-color: var(--color-surface-light);
+    color: #000000;
+    font-weight: 600;
+    border-left: 3px solid var(--color-charcoal);
+}
+
+.sidebar-heading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-muted);
+    padding: 0.5rem 0.85rem 0.25rem;
+    font-weight: 600;
+}
+
+/* Stat Cards */
+.stat-card {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background-color: var(--color-white);
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-surface-light);
+    color: var(--color-charcoal);
+    border: 1px solid var(--color-border);
+    font-size: 1.25rem;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-charcoal);
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 0.825rem;
+    color: var(--color-muted);
+    font-weight: 500;
+}
+
+/* Alerts */
+.alert-portal-success {
+    background-color: var(--color-success-bg);
+    border: 1px solid var(--color-success-border);
+    color: var(--color-success);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+}
+
+.alert-portal-danger {
+    background-color: var(--color-danger-bg);
+    border: 1px solid var(--color-danger-border);
+    color: var(--color-danger);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Empty State Component */
+.empty-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.empty-state-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-surface-light);
+    border: 1px solid var(--color-border);
+    color: var(--color-muted);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Auth Page layout */
+.auth-page {
+    background-color: var(--color-surface-light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+}
+
+.auth-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 440px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* ==================== EXAM TAKING & PALETTE STYLES ==================== */
+.exam-topbar {
+    background-color: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.exam-timer-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background-color: var(--color-surface-light);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--color-charcoal);
+}
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+    gap: 8px;
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+.palette-btn {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    padding: 0;
+}
+
+.palette-btn:hover {
+    filter: brightness(0.95);
+}
+
+.active-palette-item {
+    box-shadow: 0 0 0 2px var(--color-charcoal) !important;
+}
+
+.exam-option-card {
+    display: block;
+    position: relative;
+    cursor: pointer;
+}
+
+.exam-option-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.exam-option-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+.exam-option-label:hover {
+    background-color: var(--color-surface-light);
+    border-color: #ced4da;
+}
+
+.exam-option-card input[type="radio"]:checked + .exam-option-label {
+    background-color: #f8f9fa;
+    border-color: var(--color-charcoal);
+    font-weight: 600;
+    box-shadow: 0 0 0 1px var(--color-charcoal);
+}
+
+.option-radio-indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #adb5bd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.exam-option-card input[type="radio"]:checked + .exam-option-label .option-radio-indicator {
+    border-color: var(--color-charcoal);
+    background-color: var(--color-charcoal);
+}
+
+.exam-option-card input[type="radio"]:checked + .exam-option-label .option-radio-indicator::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ffffff;
+}
+
+/* ==========================================================================
+   Mobile Responsiveness & Helper Classes
+   ========================================================================== */
+@media (max-width: 767.98px) {
+    .border-start-md {
+        border-left: none !important;
+        border-top: 1px solid var(--color-border) !important;
+        padding-top: 1rem !important;
+        padding-left: 0 !important;
+    }
+
+    .exam-topbar {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .table td, .table th {
+        padding: 0.5rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .auth-card {
+        margin: 1rem;
+        padding: 1.5rem;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .fs-1 {
+        font-size: 1.75rem !important;
+    }
+}
+
+/* Loading button utility */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+

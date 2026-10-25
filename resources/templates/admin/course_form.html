@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(${isEdit ? 'Edit Course' : 'Create Course'})}"></head>
+<body class="bg-white d-flex flex-column min-vh-100">
+
+    <!-- Navbar Fragment -->
+    <header th:replace="~{layout/navbar :: navbar}"></header>
+
+    <!-- Main Layout Container (Sidebar + Content) -->
+    <div class="d-flex flex-grow-1">
+        
+        <!-- Sidebar Fragment with 'courses' active -->
+        <div th:replace="~{layout/sidebar :: sidebar('courses')}"></div>
+
+        <!-- Main Page Content -->
+        <main class="flex-grow-1 p-3 p-md-4 p-lg-4 overflow-auto">
+            <div class="container-fluid px-0" style="max-width: 680px;">
+
+                <!-- Page Header with Back Link -->
+                <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+                    <div>
+                        <h1 class="h4 fw-bold text-dark mb-1" th:text="${isEdit ? 'Edit Course' : 'Create New Course'}">Course Form</h1>
+                        <p class="text-secondary small mb-0">Configure course details, curriculum code, and assigned faculty instructor.</p>
+                    </div>
+                    <a th:href="@{/admin/courses}" class="btn btn-outline-dark btn-sm py-1 px-3">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Courses
+                    </a>
+                </div>
+
+                <!-- Reusable Flash Alerts Fragment -->
+                <div th:replace="~{layout/alerts :: alerts}"></div>
+
+                <!-- Course Form Card -->
+                <div class="card border">
+                    <div class="card-header">
+                        <span class="fw-semibold" th:text="${isEdit ? 'Edit Course Details' : 'New Course Information'}">Course Details</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="${isEdit ? '/admin/courses/edit/' + course.id : '/admin/courses/new'}" 
+                              th:object="${course}" 
+                              method="post">
+                            
+                            <!-- Hidden ID if edit -->
+                            <input type="hidden" th:if="${isEdit}" th:field="*{id}" />
+
+                            <!-- Course Code -->
+                            <div class="mb-3">
+                                <label for="code" class="form-label small fw-medium text-dark">Course Code <span class="text-danger">*</span></label>
+                                <input type="text" id="code" th:field="*{code}" class="form-control" placeholder="e.g. CS101, MATH201" required>
+                                <div class="form-text small text-secondary">Unique institutional course identifier (uppercase).</div>
+                                <div th:if="${#fields.hasErrors('code')}" th:errors="*{code}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <!-- Course Name -->
+                            <div class="mb-3">
+                                <label for="name" class="form-label small fw-medium text-dark">Course Name <span class="text-danger">*</span></label>
+                                <input type="text" id="name" th:field="*{name}" class="form-control" placeholder="e.g. Introduction to Computer Science" required>
+                                <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <!-- Assigned Teacher Dropdown -->
+                            <div class="mb-3">
+                                <label for="teacherId" class="form-label small fw-medium text-dark">Assigned Instructor (Teacher)</label>
+                                <select id="teacherId" th:field="*{teacherId}" class="form-select">
+                                    <option value="">-- No Teacher Assigned (Unassigned) --</option>
+                                    <option th:each="t : ${teachers}" 
+                                            th:value="${t.id}" 
+                                            th:text="${t.fullName} + ' (' + ${t.email} + ')'"
+                                            th:selected="${course.teacherId == t.id}">
+                                        Prof. Name (email@college.edu)
+                                    </option>
+                                </select>
+                                <div class="form-text small text-secondary">Select an onboarded teacher to grant them exam authoring permissions for this course.</div>
+                            </div>
+
+                            <!-- Course Description -->
+                            <div class="mb-4">
+                                <label for="description" class="form-label small fw-medium text-dark">Course Description</label>
+                                <textarea id="description" th:field="*{description}" class="form-control" rows="4" placeholder="Brief outline of syllabus, goals, and topics covered..."></textarea>
+                                <div th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger small mt-1"></div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                                <a th:href="@{/admin/courses}" class="btn btn-outline-dark btn-sm px-3 py-2">Cancel</a>
+                                <button type="submit" class="btn btn-dark btn-sm px-4 py-2">
+                                    <i class="bi bi-check2 me-1"></i>
+                                    <span th:text="${isEdit ? 'Update Course' : 'Save Course'}">Save Course</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <!-- Bootstrap Scripts Fragment -->
+    <th:block th:replace="~{layout/base :: scripts}"></th:block>
+</body>
+</html>
